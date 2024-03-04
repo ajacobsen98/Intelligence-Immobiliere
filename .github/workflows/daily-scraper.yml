@@ -1,0 +1,33 @@
+name: Daily Data Scraping
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs at midnight UTC every day
+
+jobs:
+  scrape-and-commit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+        
+    - name: Install dependencies
+      run: |
+        pip install requests beautifulsoup4 time locale csv datetime
+      
+    - name: Run scraping script
+      run: python exdakarimport.py
+      
+    - name: Commit files
+      run: |
+        git config --global user.name 'ajacobsen98'
+        git config --global user.email 'alex.magnussson@gmail.com'
+        git add .
+        git commit -m "Automated data update" -a || echo "No changes to commit"
+        git push
