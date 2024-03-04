@@ -19,15 +19,15 @@ jobs:
         
     - name: Install dependencies
       run: |
-        pip install requests beautifulsoup4 # Replace with your dependencies
+        pip install requests beautifulsoup4 time locale csv datetime
       
     - name: Run scraping script
       run: python exdakarimport.py
       
     - name: Commit files
       run: |
-        git config --global user.name 'Your Name'
-        git config --global user.email 'your.email@example.com'
+        git config --global user.name 'ajacobsen98'
+        git config --global user.email 'alex.magnussson@gmail.com'
         git add .
         git commit -m "Automated data update" -a || echo "No changes to commit"
         git push
