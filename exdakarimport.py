@@ -1,8 +1,8 @@
-import sqlite3
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import locale
+import csv
 import time
 
 # Set locale to French for date parsing
@@ -30,36 +30,16 @@ def convert_to_absolute_date(date_str):
     except ValueError:
         return date_str
 
-# Create or connect to a SQLite database
-conn = sqlite3.connect('listings.db')
-cursor = conn.cursor()
+# Filename for the CSV file
+filename = "daily_listings.csv"
 
-# Create the listings table if it doesn't exist
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS listings (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        neighborhood TEXT,
-        square_meters TEXT,
-        number_of_rooms TEXT,
-        listing_type TEXT,
-        price TEXT,
-        date_of_listing TEXT,
-        UNIQUE(name, price, date_of_listing)
-    )
-''')
-conn.commit()
-
-def insert_into_db(data):
-    try:
-        cursor.execute('''
-            INSERT INTO listings (name, neighborhood, square_meters, number_of_rooms, listing_type, price, date_of_listing)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', data)
-        conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False  # The listing already exists
+# Check if the CSV file exists and if not, create it and add the header
+try:
+    with open(filename, 'x', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Name', 'Neighborhood', 'Square Meters', 'Number of Rooms', 'Listing Type', 'Price', 'Date of Listing'])
+except FileExistsError:
+    pass  # File already exists, no need to add the header
 
 url = "https://www.expat-dakar.com/immobilier/dakar?sort=highest-price"
 params = {'page': 1}
@@ -78,23 +58,24 @@ while True:
         print("No listings found or end of listings.")
         break
 
-    for listing in listings:
-        name = listing.find(class_='listing-card__header__title').get_text(strip=True)
-        neighborhood = listing.find(class_='listing-card__header__location').get_text(strip=True).split(',')[0]
-        square_meters_tag = listing.select_one('.listing-card__header__tags__item--square-metres')
-        square_meters = square_meters_tag.get_text(strip=True) if square_meters_tag else 'N/A'
-        number_of_rooms_tag = listing.select_one('.listing-card__header__tags__item--no-of-bedrooms')
-        number_of_rooms = number_of_rooms_tag.get_text(strip=True) if number_of_rooms_tag else 'N/A'
-        listing_type = listing['data-t-listing_category_slug'] if 'data-t-listing_category_slug' in listing.attrs else 'N/A'
-        price = listing.select_one('.listing-card__price__value').get_text(strip=True).replace('\u202f', '')
-        date_of_listing = convert_to_absolute_date(listing.find(class_='listing-card__header__date').get_text(strip=True))
-        date_of_listing_str = date_of_listing.strftime("%Y-%m-%d") if isinstance(date_of_listing, datetime) else date_of_listing
+    with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        
+        for listing in listings:
+            name = listing.find(class_='listing-card__header__title').get_text(strip=True)
+            neighborhood = listing.find(class_='listing-card__header__location').get_text(strip=True).split(',')[0]
+            square_meters_tag = listing.select_one('.listing-card__header__tags__item--square-metres')
+            square_meters = square_meters_tag.get_text(strip=True) if square_meters_tag else 'N/A'
+            number_of_rooms_tag = listing.select_one('.listing-card__header__tags__item--no-of-bedrooms')
+            number_of_rooms = number_of_rooms_tag.get_text(strip=True) if number_of_rooms_tag else 'N/A'
+            listing_type = listing['data-t-listing_category_slug'] if 'data-t-listing_category_slug' in listing.attrs else 'N/A'
+            price = listing.select_one('.listing-card__price__value').get_text(strip=True).replace('\u202f', '')
+            date_of_listing = convert_to_absolute_date(listing.find(class_='listing-card__header__date').get_text(strip=True))
+            date_of_listing_str = date_of_listing.strftime("%Y-%m-%d") if isinstance(date_of_listing, datetime) else date_of_listing
 
-        # Insert into database if not exists
-        if insert_into_db((name, neighborhood, square_meters, number_of_rooms, listing_type, price, date_of_listing_str)):
-            print(f"Inserted: {name}")
-        else:
-            print(f"Skipped (already in db): {name}")
+            # Write data to CSV file
+            writer.writerow([name, neighborhood, square_meters, number_of_rooms, listing_type, price, date_of_listing_str])
+            print(f"Added to CSV: {name}")
     
     next_page = soup.select_one('a[rel="next"]')
     if not next_page:
@@ -102,5 +83,3 @@ while True:
         break
     params['page'] += 1
     time.sleep(1)  # Rate limit handling
-
-conn.close()
