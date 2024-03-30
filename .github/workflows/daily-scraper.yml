@@ -2,7 +2,6 @@ name: Daily Data Scraping
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs at midnight UTC every day
   workflow_dispatch:
 
 jobs:
@@ -31,4 +30,6 @@ jobs:
         git config --global user.email 'alex.magnussson@gmail.com'
         git add .
         git commit -m "Automated data update" -a || echo "No changes to commit"
-        git push
+        git push --set-upstream origin HEAD:main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
