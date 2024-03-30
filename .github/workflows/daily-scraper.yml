@@ -3,6 +3,7 @@ name: Daily Data Scraping
 on:
   schedule:
     - cron: '0 0 * * *' # Runs at midnight UTC every day
+  workflow_dispatch:
 
 jobs:
   scrape-and-commit:
