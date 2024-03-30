@@ -19,7 +19,7 @@ jobs:
         
     - name: Install dependencies
       run: |
-        pip install requests beautifulsoup4 time locale csv datetime
+        pip install requests beautifulsoup4
       
     - name: Run scraping script
       run: python exdakarimport.py
