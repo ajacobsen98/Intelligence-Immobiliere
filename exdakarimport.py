@@ -77,6 +77,19 @@ while True:
         
         price_tag = listing.select_one('.listing-card__price__value')
         price = price_tag.get_text(strip=True).replace('\u202f', '') if price_tag else 'N/A'
+        
+        neighborhood_tag = listing.find(class_='listing-card__header__location')
+        neighborhood = neighborhood_tag.get_text(strip=True).split(',')[0] if neighborhood_tag else 'N/A'
+        
+        square_meters_tag = listing.select_one('.listing-card__header__tags__item--square-metres')
+        square_meters = square_meters_tag.get_text(strip=True) if square_meters_tag else 'N/A'
+        
+        number_of_rooms_tag = listing.select_one('.listing-card__header__tags__item--no-of-bedrooms')
+        number_of_rooms = number_of_rooms_tag.get_text(strip=True) if number_of_rooms_tag else 'N/A'
+        
+        listing_type_tag = listing.select_one('.listing-card__header__tags__item--listing-type')
+        listing_type = listing_type_tag.get_text(strip=True) if listing_type_tag else 'N/A'
+        
         key = (name, price)
 
         date_of_listing_tag = listing.find(class_='listing-card__header__date')
@@ -105,9 +118,8 @@ while True:
 
 # Update the CSV file
 with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
-    fieldnames = ['Name', 'Price', 'Date of Listing', 'Days Listed']  # Add other fieldnames as needed
+    fieldnames = ['Name', 'Neighborhood', 'Square Meters', 'Number of Rooms', 'Listing Type', 'Price', 'Date of Listing', 'Days Listed']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
     for listing in existing_listings.values():
         writer.writerow(listing)
-
