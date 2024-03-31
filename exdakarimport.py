@@ -89,6 +89,8 @@ for listing in listings:
         date_of_listing = convert_to_absolute_date(date_of_listing_tag.get_text(strip=True)) if date_of_listing_tag else 'Unknown'
         date_of_listing_str = date_of_listing.strftime("%Y-%m-%d") if isinstance(date_of_listing, datetime) else date_of_listing
 
+        days_listed = datetime.now() - date_of_listing
+
         existing_listings[key] = {
             'Name': name,
             'Neighborhood': neighborhood,
@@ -97,7 +99,7 @@ for listing in listings:
             'Listing Type': listing_type,
             'Price': price,
             'Date of Listing': date_of_listing_str,
-            'Days Listed': 0  # Start counting from today
+            'Days Listed': days_listed,
         }
 
     current_run_listings.add(key)
