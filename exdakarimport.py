@@ -70,7 +70,7 @@ while True:
         # Check if listing already exists
         if key in existing_listings:
             # Increment days listed
-            existing_listings[key]['Days Listed'] += 1
+            existing_listings[key]['Days Listed'] = int(existing_listings[key]['Days Listed']) + 1
         else:
             # Process new listing
             neighborhood_tag = listing.find(class_='listing-card__header__location')
@@ -86,7 +86,7 @@ while True:
             listing_type = listing_type_tag if listing_type_tag else 'N/A'
             
             date_of_listing_tag = listing.find(class_='listing-card__header__date')
-            date_of_listing = convert_to_absolute_date(date_of_listing_tag.get_text(strip=True)) if date_of_listing_tag else 'Unknown'
+            date_of_listing = convert_to_absolute_date(date_of_listing_tag.get_text(strip=True)) if date_of_listing_tag else datetime.today()
             date_of_listing_str = date_of_listing.strftime("%Y-%m-%d") if isinstance(date_of_listing, datetime) else date_of_listing
 
             if isinstance(date_of_listing, datetime):
