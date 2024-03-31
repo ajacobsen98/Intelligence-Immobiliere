@@ -58,58 +58,62 @@ while True:
     if not listings:
         break
 
-for listing in listings:
-    # Extract listing details
-    name_tag = listing.find(class_='listing-card__header__title')
-    name = name_tag.get_text(strip=True) if name_tag else 'Unknown'
-    
-    price_tag = listing.select_one('.listing-card__price__value')
-    price = price_tag.get_text(strip=True).replace('\u202f', '') if price_tag else 'N/A'
-    key = (name, price)
-
-    # Check if listing already exists
-    if key in existing_listings:
-        # Increment days listed
-        existing_listings[key]['Days Listed'] += 1
-    else:
-        # Process new listing
-        neighborhood_tag = listing.find(class_='listing-card__header__location')
-        neighborhood = neighborhood_tag.get_text(strip=True).split(',')[0] if neighborhood_tag else 'N/A'
+    for listing in listings:
+        # Extract listing details
+        name_tag = listing.find(class_='listing-card__header__title')
+        name = name_tag.get_text(strip=True) if name_tag else 'Unknown'
         
-        square_meters_tag = listing.select_one('.listing-card__header__tags__item--square-metres')
-        square_meters = square_meters_tag.get_text(strip=True) if square_meters_tag else 'N/A'
-        
-        number_of_rooms_tag = listing.select_one('.listing-card__header__tags__item--no-of-bedrooms')
-        number_of_rooms = number_of_rooms_tag.get_text(strip=True) if number_of_rooms_tag else 'N/A'
-        
-        listing_type_tag = listing.get('data-t-listing_category_slug', 'N/A')
-        listing_type = listing_type_tag if listing_type_tag else 'N/A'
-        
-        date_of_listing_tag = listing.find(class_='listing-card__header__date')
-        date_of_listing = convert_to_absolute_date(date_of_listing_tag.get_text(strip=True)) if date_of_listing_tag else 'Unknown'
-        date_of_listing_str = date_of_listing.strftime("%Y-%m-%d") if isinstance(date_of_listing, datetime) else date_of_listing
+        price_tag = listing.select_one('.listing-card__price__value')
+        price = price_tag.get_text(strip=True).replace('\u202f', '') if price_tag else 'N/A'
+        key = (name, price)
 
-        days_listed = datetime.now() - date_of_listing
+        # Check if listing already exists
+        if key in existing_listings:
+            # Increment days listed
+            existing_listings[key]['Days Listed'] += 1
+        else:
+            # Process new listing
+            neighborhood_tag = listing.find(class_='listing-card__header__location')
+            neighborhood = neighborhood_tag.get_text(strip=True).split(',')[0] if neighborhood_tag else 'N/A'
+            
+            square_meters_tag = listing.select_one('.listing-card__header__tags__item--square-metres')
+            square_meters = square_meters_tag.get_text(strip=True) if square_meters_tag else 'N/A'
+            
+            number_of_rooms_tag = listing.select_one('.listing-card__header__tags__item--no-of-bedrooms')
+            number_of_rooms = number_of_rooms_tag.get_text(strip=True) if number_of_rooms_tag else 'N/A'
+            
+            listing_type_tag = listing.get('data-t-listing_category_slug', 'N/A')
+            listing_type = listing_type_tag if listing_type_tag else 'N/A'
+            
+            date_of_listing_tag = listing.find(class_='listing-card__header__date')
+            date_of_listing = convert_to_absolute_date(date_of_listing_tag.get_text(strip=True)) if date_of_listing_tag else 'Unknown'
+            date_of_listing_str = date_of_listing.strftime("%Y-%m-%d") if isinstance(date_of_listing, datetime) else date_of_listing
 
-        existing_listings[key] = {
-            'Name': name,
-            'Neighborhood': neighborhood,
-            'Square Meters': square_meters,
-            'Number of Rooms': number_of_rooms,
-            'Listing Type': listing_type,
-            'Price': price,
-            'Date of Listing': date_of_listing_str,
-            'Days Listed': days_listed,
-        }
-
-    current_run_listings.add(key)
+            if isinstance(date_of_listing, datetime):
+                days_listed = (datetime.now() - date_of_listing).days
+            else:
+                days_listed = 'Unknown'
 
 
-    next_page = soup.select_one('a[rel="next"]')
-    if not next_page:
-        break
-    params['page'] += 1
-    time.sleep(1)
+            existing_listings[key] = {
+                'Name': name,
+                'Neighborhood': neighborhood,
+                'Square Meters': square_meters,
+                'Number of Rooms': number_of_rooms,
+                'Listing Type': listing_type,
+                'Price': price,
+                'Date of Listing': date_of_listing_str,
+                'Days Listed': days_listed,
+            }
+
+        current_run_listings.add(key)
+
+
+        next_page = soup.select_one('a[rel="next"]')
+        if not next_page:
+            break
+        params['page'] += 1
+        time.sleep(1)
 
 # Update the CSV file
 with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
