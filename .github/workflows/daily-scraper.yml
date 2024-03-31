@@ -1,7 +1,6 @@
 name: Daily Data Scraping
 
 on:
-  schedule:
   workflow_dispatch:
 
 jobs:
