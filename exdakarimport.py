@@ -87,7 +87,7 @@ while True:
         number_of_rooms_tag = listing.select_one('.listing-card__header__tags__item--no-of-bedrooms')
         number_of_rooms = number_of_rooms_tag.get_text(strip=True) if number_of_rooms_tag else 'N/A'
         
-        listing_type_tag = listing.select_one('.listing-card__header__tags__item--listing-type')
+        listing_type_tag = listing.select_one('.data-t-listing_category_title')
         listing_type = listing_type_tag.get_text(strip=True) if listing_type_tag else 'N/A'
         
         key = (name, price)
