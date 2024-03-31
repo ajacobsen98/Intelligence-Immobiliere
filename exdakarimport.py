@@ -11,6 +11,20 @@ try:
 except locale.Error:
     print("French locale not available. Dates might not parse correctly.")
 
+def calculate_days_listed(date_of_listing_str):
+    """Calculate how many days a listing has been posted.
+
+    Args:
+    - date_of_listing_str (str): The date the listing was posted, in "YYYY-MM-DD" format.
+
+    Returns:
+    - int: The number of days the listing has been posted.
+    """
+    date_of_listing = datetime.strptime(date_of_listing_str, "%Y-%m-%d")
+    today = datetime.now()
+    days_listed = (today - date_of_listing).days
+    return days_listed
+
 def convert_to_absolute_date(date_str):
     today = datetime.now()
     if 'Hier' in date_str:
@@ -70,7 +84,7 @@ while True:
         # Check if listing already exists
         if key in existing_listings:
             # Increment days listed
-            existing_listings[key]['Days Listed'] = int(existing_listings[key]['Days Listed']) + 1
+            existing_listings[key]['Days Listed'] = calculate_days_listed(date_of_listing_str)
         else:
             # Process new listing
             neighborhood_tag = listing.find(class_='listing-card__header__location')
