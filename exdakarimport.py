@@ -87,7 +87,11 @@ while True:
         number_of_rooms_tag = listing.select_one('.listing-card__header__tags__item--no-of-bedrooms')
         number_of_rooms = number_of_rooms_tag.get_text(strip=True) if number_of_rooms_tag else 'N/A'
         
-        listing_type = listing.get('data-t-listing_category_title', 'N/A')
+        # Correctly extract 'data-t-listing_category_title'
+        a_tag = listing.find('a', recursive=False)  # recursive=False ensures only direct children are searched
+        if a_tag and 'data-t-listing_category_title' in a_tag.attrs:
+            # Extract the value of 'data-t-listing_category_title'
+            listing_type = a_tag['data-t-listing_category_title']
 
         key = (name, price)
 
