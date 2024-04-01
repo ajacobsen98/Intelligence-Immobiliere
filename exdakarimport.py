@@ -25,6 +25,22 @@ def calculate_days_listed(date_of_listing_str):
     except ValueError:
         # Return a default value or handle the error as appropriate
         return 'Unknown'
+    
+# Manual mapping of French month names to English for datetime parsing
+month_mapping = {
+    "janv.": "Jan",
+    "févr.": "Feb",
+    "mars": "Mar",
+    "avr.": "Apr",
+    "mai": "May",
+    "juin": "Jun",
+    "juil.": "Jul",
+    "août": "Aug",
+    "sept.": "Sep",
+    "oct.": "Oct",
+    "nov.": "Nov",
+    "déc.": "Dec"
+}
 
 def convert_to_absolute_date(date_str):
     today = datetime.now()
@@ -32,17 +48,23 @@ def convert_to_absolute_date(date_str):
         return (today - timedelta(days=1)).strftime("%Y-%m-%d")
     elif 'aujourd\'hui' in date_str:
         return today.strftime("%Y-%m-%d")
+    
     weekdays = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
-    for i, day in enumerate(weekdays):
+    for day in weekdays:
         if day in date_str:
-            today_weekday = today.weekday()
-            days_ago = (today_weekday - i) % 7
-            days_ago = 7 if days_ago == 0 else days_ago
-            return (today - timedelta(days=days_ago)).strftime("%Y-%m-%d")
-    try:
-        return datetime.strptime(date_str, "%d %b %Y").strftime("%Y-%m-%d")
-    except ValueError:
-        return 'Unknown'
+            return (today - timedelta(days=today.weekday() - weekdays.index(day))).strftime("%Y-%m-%d")
+    
+    # Handle dates with the format "14. févr., 11:52"
+    for fr_month, en_month in month_mapping.items():
+        if fr_month in date_str:
+            date_str = date_str.replace(fr_month, en_month)
+            try:
+                return datetime.strptime(date_str.split(',')[0], "%d. %b").replace(year=today.year).strftime("%Y-%m-%d")
+            except ValueError:
+                return 'Unknown'
+    
+    # If none of the above, return 'Unknown'
+    return 'Unknown'
 
 filename = "daily_listings.csv"
 existing_listings = {}
