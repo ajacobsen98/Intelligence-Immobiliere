@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import locale
 import csv
 import time
+import re
 
 # Set locale to French for date parsing
 try:
