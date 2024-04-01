@@ -48,22 +48,42 @@ def convert_to_absolute_date(date_str):
         return (today - timedelta(days=1)).strftime("%Y-%m-%d")
     elif 'aujourd\'hui' in date_str:
         return today.strftime("%Y-%m-%d")
-    
+
+    # Handle weekdays to prevent future dates
     weekdays = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
-    for day in weekdays:
-        if day in date_str:
-            return (today - timedelta(days=today.weekday() - weekdays.index(day))).strftime("%Y-%m-%d")
+    if any(day in date_str for day in weekdays):
+        weekday_number = weekdays.index([day for day in weekdays if day in date_str][0])
+        days_ago = (today.weekday() - weekday_number) % 7
+        if days_ago == 0:
+            # If today is the day of the week we're looking for, return today
+            return today.strftime("%Y-%m-%d")
+        return (today - timedelta(days=days_ago)).strftime("%Y-%m-%d")
     
-    # Handle dates with the format "14. févr., 11:52"
+    # Replace French month abbreviations with English abbreviations
     for fr_month, en_month in month_mapping.items():
-        if fr_month in date_str:
-            date_str = date_str.replace(fr_month, en_month)
-            try:
-                return datetime.strptime(date_str.split(',')[0], "%d. %b").replace(year=today.year).strftime("%Y-%m-%d")
-            except ValueError:
-                return 'Unknown'
+        date_str = date_str.replace(fr_month, en_month)
+
+    # Handle dates with the format "6. Jul '22, 08:18"
+    try:
+        # Extract year from the date string
+        year_match = re.search(r"'\d{2}", date_str)
+        if year_match:
+            year = int(year_match.group(0).strip("'"))
+            # Parse the year correctly based on the century
+            year += 2000 if year < 50 else 1900
+            date_str = re.sub(r"'\d{2}", str(year), date_str)
+        date_obj = datetime.strptime(date_str, "%d. %b %Y, %H:%M")
+        return date_obj.strftime("%Y-%m-%d")
+    except ValueError:
+        pass  # Continue to other parsing options if this fails
     
-    # If none of the above, return 'Unknown'
+    # Handle dates in the format "14. Feb., 11:52" without year
+    try:
+        date_obj = datetime.strptime(date_str.split(',')[0], "%d. %b").replace(year=today.year)
+        return date_obj.strftime("%Y-%m-%d")
+    except ValueError:
+        pass  # Continue to other parsing options if this fails
+
     return 'Unknown'
 
 filename = "daily_listings.csv"
